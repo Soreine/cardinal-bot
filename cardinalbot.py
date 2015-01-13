@@ -24,10 +24,11 @@ WALL_COLOR = (176, 1, 26)
 # various coordinates of objects in the game
 GAME_REGION = () # (left, top, width, height) values coordinates of the entire game window
 PLAY_COORDS = None # Coordinates of the play button
-LEFT_WALL = None
-UP_WALL = None
-DOWN_WALL = None
-RIGHT_WALL = None
+SQUARE_LOCATION = (GAME_WIDTH/2, GAME_HEIGHT/2)
+RIGHT_WALL = (460, 275)
+LEFT_WALL = (88, 270)
+UP_WALL = (270, 88)
+DOWN_WALL = (275, 460)
 
 def main():
     """Runs the entire program. The Cardinal game must be visible on the screen and the PLAY button visible."""
@@ -45,7 +46,7 @@ def imPath(filename):
 
 def getGameRegion():
     """Obtains the region that the Cardinal game occupies on the screen and assigns it to GAME_REGION. The game must be at the start screen (where the PLAY button is visible)."""
-    global GAME_REGION, PLAY_COORDS, LEFT_WALL, UP_WALL, DOWN_WALL, RIGHT_WALL, GAME_CENTER
+    global GAME_REGION, PLAY_COORDS, GAME_CENTER
 
     # identify the top-left corner
     logging.debug('Finding game region...')
@@ -59,12 +60,6 @@ def getGameRegion():
 
     # Calculate the position of the PLAY button
     PLAY_COORDS = (GAME_REGION[0] + 275, GAME_REGION[1] + 522)
-
-    # Calculate the coordinates of the surrounding walls
-    RIGHT_WALL = (GAME_REGION[0] + 460, GAME_REGION[1] + 275)
-    LEFT_WALL = (GAME_REGION[0] + 88, GAME_REGION[1] + 270)
-    UP_WALL = (GAME_REGION[0] + 270, GAME_REGION[1] + 88)
-    DOWN_WALL = (GAME_REGION[0] + 275, GAME_REGION[1] + 460)
 
     # Calculate the center of the screen
     GAME_CENTER = (GAME_REGION[0] + GAME_REGION[2]/2, GAME_REGION[1] + GAME_REGION[3]/2)
@@ -91,33 +86,40 @@ def startPlaying():
     newGame()
     
     while True:
-        # Wait before searching for the square
-        time.sleep(0.1)
-
         # Wait until the square is at the center of the screen
-        while not pyautogui.pixelMatchesColor(GAME_CENTER[0], GAME_CENTER[1], SQUARE_COLOR):
-            time.sleep(0.05)
-        
-        logging.debug('Must move...')
-
-        while True:
-            # The direction to go
-            direction = None
-
-            # Check for edges until one is open
-            if not pyautogui.pixelMatchesColor(LEFT_WALL[0], LEFT_WALL[1], WALL_COLOR):
-                direction = 'left'
-            elif not pyautogui.pixelMatchesColor(RIGHT_WALL[0], RIGHT_WALL[1], WALL_COLOR):
-                direction = 'right'
-            elif not pyautogui.pixelMatchesColor(UP_WALL[0], UP_WALL[1], WALL_COLOR):
-                direction = 'up'
-            elif not pyautogui.pixelMatchesColor(DOWN_WALL[0], DOWN_WALL[1], WALL_COLOR):
-                direction = 'down'
-
-            if direction is not None:
-                pyautogui.press(direction)
-                logging.debug('Moving ' + direction)
+        for i in range(0, 3):
+            img = pyautogui.screenshot(region=GAME_REGION)
+            if  img.getpixel(SQUARE_LOCATION) == SQUARE_COLOR:
                 break
+            elif i == 2:
+                logging.debug('OK I lost... PLAY AGAIN :D')
+                pyautogui.press('space');
+                break
+            else:
+                logging.debug('Waiting for square...')
+        
+        logging.debug('Must move!')
+
+        # The direction to go
+        direction = None
+        logging.debug('Checking walls')
+        # Check for an opening in on of the 4 directions
+        if not img.getpixel(LEFT_WALL) == WALL_COLOR:
+            direction = 'left'
+        elif not img.getpixel(RIGHT_WALL) == WALL_COLOR:
+            direction = 'right'
+        elif not img.getpixel(UP_WALL) == WALL_COLOR:
+            direction = 'up'
+        elif not img.getpixel(DOWN_WALL) == WALL_COLOR:
+            direction = 'down'
+            
+        if direction is not None:
+            pyautogui.press(direction)
+            logging.debug('Moving ' + direction + '!')
+            # Wait a moment for the square to move
+            time.sleep(0.29)
+        else:
+            logging.debug('No opening found...')
 
         
 
