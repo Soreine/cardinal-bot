@@ -72,7 +72,8 @@ def getGameRegion():
     GAME_CENTER = (GAME_REGION[0] + GAME_REGION[2]/2, GAME_REGION[1] + GAME_REGION[3]/2)
 
 def navigateGameWindow():
-    """Get the initial focus on the game window and mute the game, getting ready to play."""
+    """Get the initial focus on the game window and mute the game, getting
+    ready to play."""
     # Get focus on the game by clicking the center of the game region
     pyautogui.click(GAME_CENTER[0], GAME_CENTER[1], duration=1)
 
@@ -87,7 +88,9 @@ def newGame():
     logging.debug('New game...')
 
 def startPlaying():
-    """The main game playing function. This function handles all aspects of game play, including starting a new game, playing and detecting game overs."""
+    """The main game playing function. This function handles all aspects
+    of game play, including starting a new game, playing and detecting
+    game overs."""
 
     # Start a new game
     newGame()
@@ -138,13 +141,17 @@ def checkForGameOver():
     On losing, the program terminates."""
 
     # check for "You Win" message
-    result = pyautogui.locateOnScreen(imPath('you_win.png'), region=(GAME_REGION[0] + 188, GAME_REGION[1] + 94, 262, 60))
+    result = pyautogui.locateOnScreen(imPath('you_win.png'),
+                                      region=(GAME_REGION[0] + 188,
+                                              GAME_REGION[1] + 94, 262, 60))
     if result is not None:
         pyautogui.click(pyautogui.center(result))
         return LEVEL_WIN_MESSAGE
 
     # check for "You Fail" message
-    result = pyautogui.locateOnScreen(imPath('you_failed.png'), region=(GAME_REGION[0] + 167, GAME_REGION[1] + 133, 314, 39))
+    result = pyautogui.locateOnScreen(imPath('you_failed.png'),
+                                      region=(GAME_REGION[0] + 167,
+                                              GAME_REGION[1] + 133, 314, 39))
     if result is not None:
         logging.debug('Game over. Quitting.')
         sys.exit()
