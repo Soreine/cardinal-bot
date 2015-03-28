@@ -18,6 +18,8 @@ from ctypes import cdll
 
 # Our custom C screenshot shared library, faster to get images
 libscreen = cdll.LoadLibrary("./libscreenshot.so")
+# Our display
+display = None
 
 logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s.%(msecs)03d: %(message)s", datefmt="%H:%M:%S")
@@ -37,7 +39,7 @@ WALL_COLOR = (176, 1, 26)
 # various coordinates of objects in the game
 GAME_REGION = () # (left, top, width, height) values coordinates of the entire game window
 PLAY_COORDS = None # Coordinates of the play button
-SQUARE_LOCATION = (GAME_WIDTH/2, GAME_HEIGHT/2)
+SQUARE_LOCATION = (int(GAME_WIDTH/2), int(GAME_HEIGHT/2))
 RIGHT_WALL = (460, 275)
 LEFT_WALL = (88, 270)
 UP_WALL = (270, 88)
@@ -63,10 +65,13 @@ def get_pixel(img, coord):
     """
     c = libscreen.XGetPixel(img, coord[0], coord[1])
     # Convert to R, G, B values
-    color = (0x0000ff & c,
-             (0x00ff00 & c) >> 8,
-             (0xff0000 & c) >> 16)
+    color = ((0xff0000 & c) >> 16, #R
+             (0x00ff00 & c) >> 8,  #G
+             0x0000ff & c)         #B
     return color
+
+def screenshot(display, region):
+    return libscreen.screenshot(display, region[0], region[1], region[2], region[3])
 
 def imPath(filename):
     """A shortcut for joining the 'images/' file path, since it is used
@@ -82,12 +87,12 @@ def getGameRegion():
 
     # identify the top-left corner
     logging.debug("Finding game region...")
-    region = pyautogui.locateOnScreen(imPath("top-left-corner.png"))
-    if region is None:
-        raise Exception("Could not find game on screen. Is the game visible?")
+    # region = pyautogui.locateOnScreen(imPath("top-left-corner.png"))
+    # if region is None:
+    #     raise Exception("Could not find game on screen. Is the game visible?")
 
     # calculate the region of the entire game
-    GAME_REGION = (region[0], region[1], GAME_WIDTH, GAME_HEIGHT)
+    GAME_REGION = (1178, 345, 550, 550) # (region[0], region[1], GAME_WIDTH, GAME_HEIGHT)
     logging.debug("Game region found: %s" % (GAME_REGION,))
 
     # Calculate the position of the PLAY button
@@ -119,22 +124,19 @@ def startPlaying():
 
     # Start a new game
     newGame()
-    
+
+    disp = libscreen.open_display_context()
+
     while True:
         # Wait until the square is at the center of the screen
-        for i in range(0, 3):
-            img = libscreen.screenshot(region=GAME_REGION)
+        while True:
+            img = screenshot(disp, GAME_REGION)
             c = get_pixel(img, SQUARE_LOCATION)
             if c == SQUARE_COLOR:
-                break
-            elif i == 2:
-                logging.debug("OK I lost... PLAY AGAIN :D")
-                pyautogui.press("space");
                 break
             else:
                 # we don't need this image again
                 libscreen.destroy_image(img)
-                logging.debug("Waiting for square...")
         
         logging.debug("Must move!")
 
@@ -155,7 +157,6 @@ def startPlaying():
             pyautogui.press(direction)
             logging.debug("Moving " + direction + "!")
             # Wait a moment for the square to move
-            time.sleep(0.29)
         else:
             logging.debug("No opening found...")
         # Free the XImage
@@ -187,11 +188,11 @@ def checkForGameOver():
         sys.exit()
 
 def test_lib():
-    dc = libscreen.open_display_context()
-    img = libscreen.screenshot(dc, 700, 500, 400, 300)
+    disp = libscreen.open_display_context()
+    img = libscreen.screenshot(disp, 700, 500, 400, 300)
     print(get_pixel(img, (200, 0)))
     libscreen.destroy_image(img)
-    libscreen.close_display_context(dc)
+    libscreen.close_display_context(disp)
 
 if __name__ == "__main__":
     main()
