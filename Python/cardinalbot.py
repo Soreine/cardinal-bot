@@ -46,7 +46,7 @@ def main():
 def imPath(filename):
     """A shortcut for joining the 'images/'' file path, since it is used
     so often. Returns the filename with 'images/' prepended."""
-    return os.path.join('images', filename)
+    return os.path.join('../images', filename)
 
 
 def getGameRegion():
