@@ -1,4 +1,4 @@
-# Bot Cardinal 
+# Cardinal Bot 
 
 ## About
 
