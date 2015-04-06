@@ -43,6 +43,7 @@ void destroy_image(XImage* img) {
 }
 
 int main (int argc, char *argv[]) {
+  // Test the API
   Display* disp = open_display_context();
   XImage* img = screenshot(disp, 700, 500, 400, 300);
   printf("Test :%lu", XGetPixel(img, 200, 0));

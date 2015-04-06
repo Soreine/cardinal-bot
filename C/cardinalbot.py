@@ -5,6 +5,10 @@ Soreine soreine.plume@gmail.com
 A bot program to automatically play the Cardinal flash game at
 http://www.newgrounds.com/portal/view/634256
 
+This version uses an external screenshot API using X11. The time for a
+screenshot is reduced mainly because we don't store the screenshot in
+a temporary file.
+
 """
 import pyautogui
 import time
@@ -16,7 +20,7 @@ import copy
 import ctypes
 from ctypes import cdll
 
-# Our custom C screenshot shared library, faster to get images
+# Our custom C screenshot shared library, faster to get screenshots
 libscreen = cdll.LoadLibrary("./libscreenshot.so")
 # Our display
 display = None
@@ -24,10 +28,6 @@ display = None
 logging.basicConfig(level=logging.DEBUG,
                     format="%(asctime)s.%(msecs)03d: %(message)s", datefmt="%H:%M:%S")
 #logging.disable(logging.DEBUG) # uncomment to block debug log messages
-
-LOSE_MESSAGE = "lose" # checkForGameOver() returns this value if the game is lost
-
-# Settings
 
 # Global variables
 GAME_WIDTH = 550
@@ -71,13 +71,14 @@ def get_pixel(img, coord):
     return color
 
 def screenshot(display, region):
+    """Take and return a screenshot with the given region coordinates.
+    """
     return libscreen.screenshot(display, region[0], region[1], region[2], region[3])
 
 def imPath(filename):
     """A shortcut for joining the 'images/' file path, since it is used
     so often. Returns the filename with 'images/' prepended."""
     return os.path.join("../images", filename)
-
 
 def getGameRegion():
     """Obtains the region that the Cardinal game occupies on the screen
@@ -161,38 +162,6 @@ def startPlaying():
             logging.debug("No opening found...")
         # Free the XImage
         libscreen.destroy_image(img)
-
-        
-
-def checkForGameOver():
-    """Checks the screen for the "You Win" or "You Fail" message.
-
-    On winning, returns the string in LEVEL_WIN_MESSAGE.
-
-    On losing, the program terminates."""
-
-    # check for "You Win" message
-    result = pyautogui.locateOnScreen(imPath("you_win.png"),
-                                      region=(GAME_REGION[0] + 188,
-                                              GAME_REGION[1] + 94, 262, 60))
-    if result is not None:
-        pyautogui.click(pyautogui.center(result))
-        return LEVEL_WIN_MESSAGE
-
-    # check for "You Fail" message
-    result = pyautogui.locateOnScreen(imPath("you_failed.png"),
-                                      region=(GAME_REGION[0] + 167,
-                                              GAME_REGION[1] + 133, 314, 39))
-    if result is not None:
-        logging.debug("Game over. Quitting.")
-        sys.exit()
-
-def test_lib():
-    disp = libscreen.open_display_context()
-    img = libscreen.screenshot(disp, 700, 500, 400, 300)
-    print(get_pixel(img, (200, 0)))
-    libscreen.destroy_image(img)
-    libscreen.close_display_context(disp)
 
 if __name__ == "__main__":
     main()

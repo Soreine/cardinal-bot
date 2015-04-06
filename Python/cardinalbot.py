@@ -7,22 +7,23 @@ http://www.newgrounds.com/portal/view/634256
 
 """
 
-import pyautogui, time, os, logging, sys, random, copy
+import pyautogui
+import time
+import os
+import logging
+import sys
+import random
+import copy
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s.%(msecs)03d: %(message)s', datefmt='%H:%M:%S')
 #logging.disable(logging.DEBUG) # uncomment to block debug log messages
-
-LOSE_MESSAGE = 'lose' # checkForGameOver() returns this value if the game is lost
-
-# Settings
 
 # Global variables
 GAME_WIDTH = 550
 GAME_HEIGHT = 550 # the game screen is always 550 x 550
 SQUARE_COLOR = (249, 8, 42)
 WALL_COLOR = (176, 1, 26)
-
 
 # various coordinates of objects in the game
 GAME_REGION = () # (left, top, width, height) values coordinates of the entire game window
@@ -102,6 +103,7 @@ def startPlaying():
             if  img.getpixel(SQUARE_LOCATION) == SQUARE_COLOR:
                 break
             elif i == 2:
+                # After three attempts we can safely assume we lost.
                 logging.debug('OK I lost... PLAY AGAIN :D')
                 pyautogui.press('space');
                 break
@@ -126,35 +128,12 @@ def startPlaying():
         if direction is not None:
             pyautogui.press(direction)
             logging.debug('Moving ' + direction + '!')
-            # Wait a moment for the square to move
-            time.sleep(0.29)
+            # Wait a moment for the square to move. This takes the
+            # time to take a screenshot into account, and the time the
+            # square leave the screen too.
+            time.sleep(0.29) # As the screenshot time varies, this is a practical upper bound.
         else:
             logging.debug('No opening found...')
-
-        
-
-def checkForGameOver():
-    """Checks the screen for the "You Win" or "You Fail" message.
-
-    On winning, returns the string in LEVEL_WIN_MESSAGE.
-
-    On losing, the program terminates."""
-
-    # check for "You Win" message
-    result = pyautogui.locateOnScreen(imPath('you_win.png'),
-                                      region=(GAME_REGION[0] + 188,
-                                              GAME_REGION[1] + 94, 262, 60))
-    if result is not None:
-        pyautogui.click(pyautogui.center(result))
-        return LEVEL_WIN_MESSAGE
-
-    # check for "You Fail" message
-    result = pyautogui.locateOnScreen(imPath('you_failed.png'),
-                                      region=(GAME_REGION[0] + 167,
-                                              GAME_REGION[1] + 133, 314, 39))
-    if result is not None:
-        logging.debug('Game over. Quitting.')
-        sys.exit()
 
 
 if __name__ == '__main__':
